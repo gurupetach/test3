@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaData Community Directory</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="css/custom.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom styles -->
+    <style>
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 0.5rem;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        /* Loading spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Status badges */
+        .status-approved {
+            background-color: #10B981;
+        }
+        
+        .status-pending {
+            background-color: #F59E0B;
+        }
+        
+        .status-waiting {
+            background-color: #6366F1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="img/logo.png" alt="WaData Logo" class="h-10 mr-3" onerror="this.src='https://via.placeholder.com/40x40?text=WD'; this.onerror='';">
+                <span class="font-bold text-xl text-blue-600">WaData</span>
+            </div>
+            <div>
+                <button id="logout-btn" class="hidden text-sm text-gray-600 hover:text-gray-800 flex items-center">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Authentication Container -->
+    <div id="auth-container" class="container mx-auto px-4 py-10">
+        <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">WaData Team Access</h2>
+                <p class="text-gray-600">Please enter the access password</p>
+            </div>
+            
+            <form id="password-form" class="space-y-4">
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" name="password" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <button type="submit" 
+                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Access Directory
+                    </button>
+                </div>
+                <div id="auth-error" class="text-red-600 text-sm hidden">
+                    Incorrect password. Please try again.
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content (hidden until authenticated) -->
+    <div id="main-content" class="container mx-auto px-4 py-6 hidden">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-900">WaData Community Directory</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto mt-2">
+                Connect with our community of data professionals, contributors, and champions working to create a fair data economy in Africa.
+            </p>
+        </header>
+
+        <!-- Control Panel -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-8">
+            <div class="flex flex-wrap gap-4 md:flex-row">
+                <!-- Search -->
+                <div class="w-full md:w-auto flex-grow">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <input type="text" id="search" placeholder="Search by name or email..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md">
+                </div>
+                
+                <!-- Role Filter -->
+                <div class="w-full md:w-auto">
+                    <label for="role-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Role</label>
+                    <select id="role-filter" class="w-full px-4 py-2 border border-gray-300 rounded-md">
+                        <option value="all">All Roles</option>
+                        <option value="Data Champ">Data Champ</option>
+                        <option value="Customer">Customer</option>
+                        <option value="Account Manager">Account Manager</option>
+                        <option value="Administrator">Administrator</option>
+                        <option value="Subscriber">Subscriber</option>
+                    </select>
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="w-full md:w-auto">
+                    <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="status-filter" class="w-full px-4 py-2 border border-gray-300 rounded-md">
+                        <option value="all">All Status</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Waiting email confirmation">Waiting Confirmation</option>
+                    </select>
+                </div>
+                
+                <!-- Filter Button -->
+                <div class="w-full md:w-auto self-end">
+                    <button id="apply-filters" class="w-full bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
+                <div class="text-gray-500 text-sm">Total Users</div>
+                <div class="text-2xl font-bold" id="total-users">238</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+                <div class="text-gray-500 text-sm">Data Champs</div>
+                <div class="text-2xl font-bold" id="data-champs">228</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-500">
+                <div class="text-gray-500 text-sm">Customers</div>
+                <div class="text-2xl font-bold" id="customers">3</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500">
+                <div class="text-gray-500 text-sm">New This Month</div>
+                <div class="text-2xl font-bold" id="new-users">12</div>
+            </div>
+        </div>
+
+        <!-- Results count -->
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Community Members</h2>
+            <div id="results-count" class="text-gray-600">Showing <span id="shown-count">0</span> of <span id="total-count">0</span> members</div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div id="loading" class="hidden">
+            <div class="loader"></div>
+            <p class="text-center text-gray-600">Loading users...</p>
+        </div>
+
+        <!-- User Grid -->
+        <div id="user-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- User cards will be dynamically inserted here -->
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex justify-center my-8">
+            <nav class="inline-flex rounded-md shadow-sm">
+                <button id="prev-page" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Previous
+                </button>
+                <div id="page-numbers" class="hidden md:flex">
+                    <!-- Page numbers will be inserted here -->
+                </div>
+                <button id="next-page"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">User Details</h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modal-content">
+                <!-- User details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for the application -->
+    <!-- At the bottom of index.html before the closing </body> tag -->
+    <script src=".do/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/users.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+/* css/custom.css */
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 50;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 0.5rem;
+    width: 80%;
+    max-width: 800px;
+}
+
+/* Loading spinner */
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Status badges */
+.status-approved {
+    background-color: #10B981;
+}
+
+.status-pending {
+    background-color: #F59E0B;
+}
+
+.status-waiting {
+    background-color: #6366F1;
+}
